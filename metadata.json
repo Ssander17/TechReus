@@ -1,0 +1,8 @@
+{
+  "name": "TechReus",
+  "description": "Plataforma de tecnología sostenible reacondicionada con diagnósticos automatizados certificados, calculadora de huella de carbono, tracker de hábitos, mapa de puntos de recogida y un asistente de IA.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
