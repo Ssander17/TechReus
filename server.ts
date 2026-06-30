@@ -3,6 +3,9 @@ import path from "path";
 import dotenv from "dotenv";
 import { GoogleGenAI } from "@google/genai";
 import { createServer as createViteServer } from "vite";
+import { db } from "./src/db/index.ts";
+import { dbCustomers, dbUserSubmittedProducts } from "./src/db/schema.ts";
+import { eq } from "drizzle-orm";
 
 dotenv.config();
 
@@ -355,151 +358,164 @@ app.get("/api/challenges", (req, res) => {
   res.json(CHALLENGES);
 });
 
-// CUSTOMER REGISTRY DATABASE (In-memory CRUD store)
-const CUSTOMERS = [
-  {
-    id: "c-1",
-    name: "Alejandra Gómez",
-    email: "alejandra.gomez@example.com",
-    phone: "+34 612 345 678",
-    address: "Calle de Alcalá 45, Madrid, 28014",
-    trackingNumber: "TR-2026-89472",
-    hasAccount: true,
-    password: "123",
-    ecoPoints: 120,
-    createdAt: "2026-06-25T10:30:00.000Z"
-  },
-  {
-    id: "c-2",
-    name: "Carlos Mendoza",
-    email: "carlos.mendoza@example.com",
-    phone: "+34 699 887 766",
-    address: "Avinguda Diagonal 230, Barcelona, 08013",
-    trackingNumber: "TR-2026-10582",
-    hasAccount: false,
-    password: "",
-    ecoPoints: 0,
-    createdAt: "2026-06-27T15:45:00.000Z"
+// API Endpoints for Customers (CRUD backed by Cloud SQL)
+app.get("/api/customers", async (req, res) => {
+  try {
+    const list = await db.select().from(dbCustomers);
+    res.json(list);
+  } catch (error: any) {
+    console.error("Database error in GET /api/customers:", error);
+    res.status(500).json({ error: "Error al obtener clientes desde la base de datos." });
   }
-];
-
-// API Endpoints for Customers (CRUD)
-app.get("/api/customers", (req, res) => {
-  res.json(CUSTOMERS);
 });
 
 // Authentication Endpoint for Clients
-app.post("/api/customers/login", (req, res) => {
+app.post("/api/customers/login", async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
     return res.status(400).json({ error: "El correo y la contraseña son obligatorios." });
   }
-  const customer = CUSTOMERS.find(
-    c => c.email.toLowerCase() === email.toLowerCase() && c.hasAccount && c.password === password
-  );
-  if (!customer) {
-    return res.status(401).json({ error: "Correo o contraseña incorrectos, o la cuenta no existe." });
+  try {
+    const list = await db.select().from(dbCustomers).where(eq(dbCustomers.email, email));
+    const customer = list[0];
+    if (!customer || !customer.hasAccount || customer.password !== password) {
+      return res.status(401).json({ error: "Correo o contraseña incorrectos, o la cuenta no existe." });
+    }
+    res.json(customer);
+  } catch (error: any) {
+    console.error("Database error in POST /api/customers/login:", error);
+    res.status(500).json({ error: "Error al iniciar sesión." });
   }
-  res.json(customer);
 });
 
-app.post("/api/customers", (req, res) => {
+app.post("/api/customers", async (req, res) => {
   const { name, email, phone, address, trackingNumber, hasAccount, password, ecoPoints } = req.body;
   if (!name || !email) {
     return res.status(400).json({ error: "El nombre y el correo electrónico son obligatorios." });
   }
-  
-  // Check if account already exists with this email when trying to register
-  if (hasAccount) {
-    const existing = CUSTOMERS.find(c => c.email.toLowerCase() === email.toLowerCase() && c.hasAccount);
-    if (existing) {
+  try {
+    // Check if account already exists with this email when trying to register
+    const existingList = await db.select().from(dbCustomers).where(eq(dbCustomers.email, email));
+    const existing = existingList[0];
+    if (existing && hasAccount && existing.hasAccount) {
       return res.status(400).json({ error: "Ya existe una cuenta activa con este correo electrónico." });
     }
-  }
 
-  const newCustomer = {
-    id: `c-${Date.now()}`,
-    name,
-    email,
-    phone: phone || "",
-    address: address || "",
-    trackingNumber: trackingNumber || `TR-2026-${Math.floor(10000 + Math.random() * 90000)}`,
-    hasAccount: !!hasAccount,
-    password: password || "",
-    ecoPoints: ecoPoints || (hasAccount ? 100 : 0), // 100 welcome ecoPoints!
-    createdAt: new Date().toISOString()
-  };
-  CUSTOMERS.push(newCustomer);
-  res.status(201).json(newCustomer);
+    const customerId = `c-${Date.now()}`;
+    const newCustomer = {
+      id: customerId,
+      name,
+      email,
+      phone: phone || "",
+      address: address || "",
+      trackingNumber: trackingNumber || `TR-2026-${Math.floor(10000 + Math.random() * 90000)}`,
+      hasAccount: !!hasAccount,
+      password: password || "",
+      ecoPoints: ecoPoints || (hasAccount ? 100 : 0), // 100 welcome ecoPoints!
+      createdAt: new Date().toISOString()
+    };
+
+    if (existing) {
+      await db.update(dbCustomers)
+        .set(newCustomer)
+        .where(eq(dbCustomers.id, existing.id));
+      newCustomer.id = existing.id;
+    } else {
+      await db.insert(dbCustomers).values(newCustomer);
+    }
+    res.status(201).json(newCustomer);
+  } catch (error: any) {
+    console.error("Database error in POST /api/customers:", error);
+    res.status(500).json({ error: "Error al registrar cliente en la base de datos." });
+  }
 });
 
-app.put("/api/customers/:id", (req, res) => {
+app.put("/api/customers/:id", async (req, res) => {
   const { id } = req.params;
   const { name, email, phone, address, trackingNumber, hasAccount, password, ecoPoints } = req.body;
-  const index = CUSTOMERS.findIndex(c => c.id === id);
-  if (index === -1) {
-    return res.status(404).json({ error: "Cliente no encontrado." });
+  try {
+    const list = await db.select().from(dbCustomers).where(eq(dbCustomers.id, id));
+    const existing = list[0];
+    if (!existing) {
+      return res.status(404).json({ error: "Cliente no encontrado." });
+    }
+    
+    const updated = {
+      name: name !== undefined ? name : existing.name,
+      email: email !== undefined ? email : existing.email,
+      phone: phone !== undefined ? phone : existing.phone,
+      address: address !== undefined ? address : existing.address,
+      trackingNumber: trackingNumber !== undefined ? trackingNumber : existing.trackingNumber,
+      hasAccount: hasAccount !== undefined ? !!hasAccount : existing.hasAccount,
+      password: password !== undefined ? password : existing.password,
+      ecoPoints: ecoPoints !== undefined ? Number(ecoPoints) : existing.ecoPoints,
+    };
+
+    await db.update(dbCustomers).set(updated).where(eq(dbCustomers.id, id));
+    res.json({ id, ...updated, createdAt: existing.createdAt });
+  } catch (error: any) {
+    console.error("Database error in PUT /api/customers/:id:", error);
+    res.status(500).json({ error: "Error al actualizar cliente." });
   }
-  CUSTOMERS[index] = {
-    ...CUSTOMERS[index],
-    name: name !== undefined ? name : CUSTOMERS[index].name,
-    email: email !== undefined ? email : CUSTOMERS[index].email,
-    phone: phone !== undefined ? phone : CUSTOMERS[index].phone,
-    address: address !== undefined ? address : CUSTOMERS[index].address,
-    trackingNumber: trackingNumber !== undefined ? trackingNumber : CUSTOMERS[index].trackingNumber,
-    hasAccount: hasAccount !== undefined ? !!hasAccount : CUSTOMERS[index].hasAccount,
-    password: password !== undefined ? password : CUSTOMERS[index].password,
-    ecoPoints: ecoPoints !== undefined ? Number(ecoPoints) : CUSTOMERS[index].ecoPoints
-  };
-  res.json(CUSTOMERS[index]);
 });
 
-app.delete("/api/customers/:id", (req, res) => {
+app.delete("/api/customers/:id", async (req, res) => {
   const { id } = req.params;
-  const index = CUSTOMERS.findIndex(c => c.id === id);
-  if (index === -1) {
-    return res.status(404).json({ error: "Cliente no encontrado." });
+  try {
+    const list = await db.select().from(dbCustomers).where(eq(dbCustomers.id, id));
+    const existing = list[0];
+    if (!existing) {
+      return res.status(404).json({ error: "Cliente no encontrado." });
+    }
+    await db.delete(dbCustomers).where(eq(dbCustomers.id, id));
+    res.json(existing);
+  } catch (error: any) {
+    console.error("Database error in DELETE /api/customers/:id:", error);
+    res.status(500).json({ error: "Error al eliminar cliente de la base de datos." });
   }
-  const deleted = CUSTOMERS.splice(index, 1);
-  res.json(deleted[0]);
 });
 
 
-// 2.5 USER-SUBMITTED PRODUCTS (Equipment for review and sale)
-const USER_PRODUCTS = [
-  {
-    id: "up-1",
-    name: "MacBook Pro M1 2020",
-    description: "MacBook Pro con chip M1 en excelente estado físico, teclado en español, caja y cargador original.",
-    category: "Laptops",
-    suggestedPrice: 750,
-    co2Saved: 250,
-    specs: {
-      batteryHealth: "89%",
-      screenStatus: "Excelente (Sin rasguños)",
-      storageStatus: "SSD 256GB OK",
-      cpuStatus: "Apple M1 8-Core"
-    },
-    customerEmail: "alejandra.gomez@example.com",
-    customerName: "Alejandra Gómez",
-    status: "pending_review",
-    daysRemaining: 11,
-    createdAt: "2026-06-28T12:00:00.000Z"
-  }
-];
-
-app.get("/api/user-products", (req, res) => {
+// API Endpoints for User-Submitted Products (backed by Cloud SQL)
+app.get("/api/user-products", async (req, res) => {
   const { email } = req.query;
-  if (email) {
-    const filtered = USER_PRODUCTS.filter(
-      p => p.customerEmail.toLowerCase() === (email as string).toLowerCase()
-    );
-    return res.json(filtered);
+  try {
+    let list;
+    if (email) {
+      list = await db.select().from(dbUserSubmittedProducts).where(eq(dbUserSubmittedProducts.customerEmail, email as string));
+    } else {
+      list = await db.select().from(dbUserSubmittedProducts);
+    }
+
+    // Map each db record to frontend UserSubmittedProduct structure (with specs nested object)
+    const formatted = list.map(row => ({
+      id: row.id,
+      name: row.name,
+      description: row.description || "",
+      category: row.category,
+      suggestedPrice: row.suggestedPrice,
+      co2Saved: row.co2Saved,
+      specs: {
+        batteryHealth: row.batteryHealth || undefined,
+        screenStatus: row.screenStatus || undefined,
+        storageStatus: row.storageStatus || undefined,
+        cpuStatus: row.cpuStatus || undefined,
+      },
+      customerEmail: row.customerEmail,
+      customerName: row.customerName || undefined,
+      status: row.status,
+      daysRemaining: row.daysRemaining,
+      createdAt: row.createdAt,
+    }));
+
+    res.json(formatted);
+  } catch (error: any) {
+    console.error("Database error in GET /api/user-products:", error);
+    res.status(500).json({ error: "Error al obtener productos del usuario desde la base de datos." });
   }
-  res.json(USER_PRODUCTS);
 });
 
-app.post("/api/user-products", (req, res) => {
+app.post("/api/user-products", async (req, res) => {
   const { name, description, category, suggestedPrice, specs, customerEmail, customerName } = req.body;
   if (!name || !category || !suggestedPrice || !customerEmail) {
     return res.status(400).json({ error: "Faltan campos obligatorios para registrar el producto." });
@@ -521,14 +537,18 @@ app.post("/api/user-products", (req, res) => {
   // Create new user product with 10 to 15 days review period (inclusive)
   const daysRemaining = 10 + Math.floor(Math.random() * 6); // 10, 11, 12, 13, 14, 15
 
-  const newProduct = {
-    id: `up-${Date.now()}`,
+  const productId = `up-${Date.now()}`;
+  const newProductRow = {
+    id: productId,
     name,
     description: description || "",
     category,
     suggestedPrice: Number(suggestedPrice),
     co2Saved,
-    specs: specs || {},
+    batteryHealth: specs?.batteryHealth || null,
+    screenStatus: specs?.screenStatus || null,
+    storageStatus: specs?.storageStatus || null,
+    cpuStatus: specs?.cpuStatus || null,
     customerEmail,
     customerName: customerName || "Usuario Registrado",
     status: "pending_review",
@@ -536,8 +556,29 @@ app.post("/api/user-products", (req, res) => {
     createdAt: new Date().toISOString()
   };
 
-  USER_PRODUCTS.push(newProduct);
-  res.status(201).json(newProduct);
+  try {
+    await db.insert(dbUserSubmittedProducts).values(newProductRow);
+
+    const responseProduct = {
+      id: productId,
+      name,
+      description: description || "",
+      category,
+      suggestedPrice: Number(suggestedPrice),
+      co2Saved,
+      specs: specs || {},
+      customerEmail,
+      customerName: customerName || "Usuario Registrado",
+      status: "pending_review",
+      daysRemaining,
+      createdAt: newProductRow.createdAt
+    };
+
+    res.status(201).json(responseProduct);
+  } catch (error: any) {
+    console.error("Database error in POST /api/user-products:", error);
+    res.status(500).json({ error: "Error al registrar el producto en la base de datos." });
+  }
 });
 
 
