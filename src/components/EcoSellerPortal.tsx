@@ -64,11 +64,31 @@ export default function EcoSellerPortal({
     if (!loggedInUser) return;
     setListingsLoading(true);
     try {
-      const res = await fetch(`/api/user-products?email=${encodeURIComponent(loggedInUser.email)}`);
-      if (res.ok) {
-        const data = await res.json();
-        setListings(data);
+      let apiListings: UserSubmittedProduct[] = [];
+      try {
+        const res = await fetch(`/api/user-products?email=${encodeURIComponent(loggedInUser.email)}`);
+        if (res.ok) {
+          apiListings = await res.json();
+        }
+      } catch (err) {
+        console.warn("API listings fetch failed, using local listings fallback:", err);
       }
+
+      // Load local products from localStorage
+      const localStr = localStorage.getItem("techreus_local_products");
+      const localProducts: UserSubmittedProduct[] = localStr ? JSON.parse(localStr) : [];
+
+      // Filter local products for this user
+      const userLocalProducts = localProducts.filter(
+        p => p.customerEmail.toLowerCase() === loggedInUser.email.toLowerCase()
+      );
+
+      // Merge: API results first, then override or add with local ones
+      const mergedMap = new Map<string, UserSubmittedProduct>();
+      apiListings.forEach(p => mergedMap.set(p.id, p));
+      userLocalProducts.forEach(p => mergedMap.set(p.id, p));
+
+      setListings(Array.from(mergedMap.values()));
     } catch (err) {
       console.error("Error fetching listings:", err);
     } finally {
@@ -92,21 +112,39 @@ export default function EcoSellerPortal({
     setAuthLoading(true);
     setAuthError(null);
     try {
-      const res = await fetch("/api/customers/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: loginData.email,
-          password: loginData.password
-        })
-      });
+      let user: Customer | null = null;
+      try {
+        const res = await fetch("/api/customers/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: loginData.email,
+            password: loginData.password
+          })
+        });
 
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || "Credenciales incorrectas.");
+        if (res.ok) {
+          user = await res.json();
+        }
+      } catch (err) {
+        console.warn("API login failed, checking local storage:", err);
       }
 
-      const user = await res.json();
+      if (!user) {
+        const localStr = localStorage.getItem("techreus_local_customers");
+        const localCustomers: Customer[] = localStr ? JSON.parse(localStr) : [];
+        const found = localCustomers.find(
+          c => c.email.toLowerCase() === loginData.email.toLowerCase() && c.hasAccount && c.password === loginData.password
+        );
+        if (found) {
+          user = found;
+        }
+      }
+
+      if (!user) {
+        throw new Error("Credenciales incorrectas o la cuenta no existe.");
+      }
+
       setLoggedInUser(user);
       setAuthSuccess(`¡Bienvenido de nuevo, ${user.name}!`);
       setTimeout(() => setAuthSuccess(null), 3500);
@@ -135,25 +173,50 @@ export default function EcoSellerPortal({
     setAuthLoading(true);
     setAuthError(null);
     try {
-      const res = await fetch("/api/customers", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          email,
-          phone,
-          address,
-          hasAccount: true,
-          password
-        })
-      });
+      let user: Customer | null = null;
+      try {
+        const res = await fetch("/api/customers", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name,
+            email,
+            phone,
+            address,
+            hasAccount: true,
+            password
+          })
+        });
 
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || "Error al crear la cuenta.");
+        if (res.ok) {
+          user = await res.json();
+        }
+      } catch (err) {
+        console.warn("API register failed, saving locally:", err);
       }
 
-      const user = await res.json();
+      if (!user) {
+        user = {
+          id: `c-${Date.now()}`,
+          name,
+          email,
+          phone: phone || "",
+          address: address || "",
+          trackingNumber: `TR-2026-${Math.floor(10000 + Math.random() * 90000)}`,
+          hasAccount: true,
+          password,
+          ecoPoints: 100, // Welcome points
+          createdAt: new Date().toISOString()
+        } as Customer;
+      }
+
+      // Save to localStorage list
+      const localStr = localStorage.getItem("techreus_local_customers");
+      const localCustomers: Customer[] = localStr ? JSON.parse(localStr) : [];
+      const filtered = localCustomers.filter(c => c.id !== user!.id && c.email.toLowerCase() !== user!.email.toLowerCase());
+      filtered.push(user);
+      localStorage.setItem("techreus_local_customers", JSON.stringify(filtered));
+
       setLoggedInUser(user);
       setAuthSuccess("¡Cuenta creada exitosamente! Ya puedes registrar tu equipo.");
       setTimeout(() => setAuthSuccess(null), 4000);
@@ -178,14 +241,45 @@ export default function EcoSellerPortal({
 
     setSubmittingDevice(true);
     try {
-      const res = await fetch("/api/user-products", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const co2Saved = category === "Laptops" ? 250 : category === "Smartphones" ? 75 : 120;
+      const devicePayload = {
+        name,
+        description,
+        category,
+        suggestedPrice: Number(suggestedPrice),
+        specs: {
+          cpuStatus,
+          batteryHealth: `${batteryHealth}%`,
+          storageStatus,
+          screenStatus
+        },
+        customerEmail: loggedInUser.email,
+        customerName: loggedInUser.name
+      };
+
+      let registeredProduct: UserSubmittedProduct | null = null;
+      try {
+        const res = await fetch("/api/user-products", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(devicePayload)
+        });
+
+        if (res.ok) {
+          registeredProduct = await res.json();
+        }
+      } catch (err) {
+        console.warn("API product submit failed, saving locally:", err);
+      }
+
+      if (!registeredProduct) {
+        registeredProduct = {
+          id: `up-${Date.now()}`,
           name,
           description,
           category,
           suggestedPrice: Number(suggestedPrice),
+          co2Saved,
           specs: {
             cpuStatus,
             batteryHealth: `${batteryHealth}%`,
@@ -193,13 +287,18 @@ export default function EcoSellerPortal({
             screenStatus
           },
           customerEmail: loggedInUser.email,
-          customerName: loggedInUser.name
-        })
-      });
-
-      if (!res.ok) {
-        throw new Error("No se pudo registrar el dispositivo.");
+          customerName: loggedInUser.name,
+          status: "pending_review",
+          daysRemaining: 12,
+          createdAt: new Date().toISOString()
+        } as UserSubmittedProduct;
       }
+
+      // Save to localStorage list
+      const localStr = localStorage.getItem("techreus_local_products");
+      const localProducts: UserSubmittedProduct[] = localStr ? JSON.parse(localStr) : [];
+      localProducts.push(registeredProduct);
+      localStorage.setItem("techreus_local_products", JSON.stringify(localProducts));
 
       setSubmitSuccess(true);
       setDeviceData({

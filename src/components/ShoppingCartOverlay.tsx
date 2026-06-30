@@ -110,21 +110,40 @@ export default function ShoppingCartOverlay({
     setAuthError(null);
     setLoading(true);
     try {
-      const res = await fetch("/api/customers/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: loginData.email,
-          password: loginData.password
-        })
-      });
+      let user: Customer | null = null;
+      try {
+        const res = await fetch("/api/customers/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: loginData.email,
+            password: loginData.password
+          })
+        });
 
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || "Contraseña o correo incorrectos.");
+        if (res.ok) {
+          user = await res.json();
+        }
+      } catch (err) {
+        console.warn("No se pudo conectar para iniciar sesión en la API, buscando localmente:", err);
       }
 
-      const user = await res.json();
+      // Check localStorage as fallback
+      if (!user) {
+        const localStr = localStorage.getItem("techreus_local_customers");
+        const localCustomers: Customer[] = localStr ? JSON.parse(localStr) : [];
+        const found = localCustomers.find(
+          c => c.email.toLowerCase() === loginData.email.toLowerCase() && c.hasAccount && c.password === loginData.password
+        );
+        if (found) {
+          user = found;
+        }
+      }
+
+      if (!user) {
+        throw new Error("Contraseña o correo incorrectos, o la cuenta no existe.");
+      }
+
       setLoggedInUser(user);
       setFormData({
         name: user.name,
@@ -189,18 +208,41 @@ export default function ShoppingCartOverlay({
         ecoPoints: checkoutType === 'create_account' ? 100 : (loggedInUser ? (loggedInUser.ecoPoints || 0) + 20 : 0) // Earn points for purchasing!
       };
 
-      const res = await fetch("/api/customers", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
+      let data: Customer | null = null;
+      try {
+        const res = await fetch("/api/customers", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
 
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || "No se pudo registrar la compra con tus datos.");
+        if (res.ok) {
+          data = await res.json();
+        }
+      } catch (err) {
+        console.warn("No se pudo sincronizar la compra en el servidor, guardando de forma local:", err);
       }
 
-      const data = await res.json();
+      if (!data) {
+        data = {
+          id: `c-${Date.now()}`,
+          ...payload
+        } as Customer;
+      }
+
+      // Save user to localStorage
+      const localStr = localStorage.getItem("techreus_local_customers");
+      const localCustomers: Customer[] = localStr ? JSON.parse(localStr) : [];
+      const filtered = localCustomers.filter(c => c.id !== data!.id && c.email.toLowerCase() !== data!.email.toLowerCase());
+      filtered.push(data);
+      localStorage.setItem("techreus_local_customers", JSON.stringify(filtered));
+
+      // Remove from deleted list
+      const deletedStr = localStorage.getItem("techreus_deleted_customers");
+      let deletedIds: string[] = deletedStr ? JSON.parse(deletedStr) : [];
+      deletedIds = deletedIds.filter(id => id !== data!.id);
+      localStorage.setItem("techreus_deleted_customers", JSON.stringify(deletedIds));
+
       setRegisteredCustomer(data);
       setCheckoutStep('success');
     } catch (err: any) {

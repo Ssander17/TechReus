@@ -29,13 +29,44 @@ export default function CustomerCrud() {
   const fetchCustomers = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/customers");
-      if (!res.ok) throw new Error("No se pudieron cargar los datos de los clientes.");
-      const data = await res.json();
-      setCustomers(data);
+      let apiCustomers: Customer[] = [];
+      try {
+        const res = await fetch("/api/customers");
+        if (res.ok) {
+          apiCustomers = await res.json();
+        }
+      } catch (err) {
+        console.warn("No se pudo conectar al servidor, se usarán los datos locales únicamente:", err);
+      }
+
+      // Load local modifications/creations
+      const localStr = localStorage.getItem("techreus_local_customers");
+      const localCustomers: Customer[] = localStr ? JSON.parse(localStr) : [];
+
+      // Load deleted list
+      const deletedStr = localStorage.getItem("techreus_deleted_customers");
+      const deletedIds: string[] = deletedStr ? JSON.parse(deletedStr) : [];
+
+      // Merge: API customers first, then apply/add local ones, and filter out deleted ones
+      const mergedMap = new Map<string, Customer>();
+      
+      apiCustomers.forEach(c => {
+        if (!deletedIds.includes(c.id)) {
+          mergedMap.set(c.id, c);
+        }
+      });
+
+      localCustomers.forEach(c => {
+        if (!deletedIds.includes(c.id)) {
+          mergedMap.set(c.id, c);
+        }
+      });
+
+      const mergedList = Array.from(mergedMap.values());
+      setCustomers(mergedList);
       setError(null);
     } catch (err: any) {
-      setError(err.message || "Error al conectar con la base de datos.");
+      setError(err.message || "Error al procesar la lista de clientes.");
     } finally {
       setLoading(false);
     }
@@ -87,25 +118,87 @@ export default function CustomerCrud() {
     }
 
     try {
-      let res;
+      let savedCustomer: Customer | null = null;
+      let apiSucceeded = false;
+
       if (editingId) {
         // UPDATE Client
-        res = await fetch(`/api/customers/${editingId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData)
-        });
+        try {
+          const res = await fetch(`/api/customers/${editingId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(formData)
+          });
+          if (res.ok) {
+            savedCustomer = await res.json();
+            apiSucceeded = true;
+          }
+        } catch (err) {
+          console.warn("API update failed, updating locally:", err);
+        }
+
+        if (!savedCustomer) {
+          const original = customers.find(c => c.id === editingId);
+          savedCustomer = {
+            id: editingId,
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            address: formData.address,
+            trackingNumber: formData.trackingNumber || original?.trackingNumber || "",
+            hasAccount: original?.hasAccount ?? false,
+            password: original?.password ?? "",
+            ecoPoints: original?.ecoPoints ?? 0,
+            createdAt: original?.createdAt ?? new Date().toISOString()
+          };
+        }
       } else {
         // CREATE Client
-        res = await fetch("/api/customers", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData)
-        });
+        try {
+          const res = await fetch("/api/customers", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(formData)
+          });
+          if (res.ok) {
+            savedCustomer = await res.json();
+            apiSucceeded = true;
+          }
+        } catch (err) {
+          console.warn("API create failed, creating locally:", err);
+        }
+
+        if (!savedCustomer) {
+          savedCustomer = {
+            id: `c-${Date.now()}`,
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            address: formData.address,
+            trackingNumber: formData.trackingNumber || `TR-2026-${Math.floor(10000 + Math.random() * 90000)}`,
+            hasAccount: false,
+            password: "",
+            ecoPoints: 0,
+            createdAt: new Date().toISOString()
+          };
+        }
       }
 
-      if (!res.ok) throw new Error("Error al guardar el registro del cliente.");
-      
+      if (savedCustomer) {
+        // Save to localStorage list
+        const localStr = localStorage.getItem("techreus_local_customers");
+        const localCustomers: Customer[] = localStr ? JSON.parse(localStr) : [];
+        const filtered = localCustomers.filter(c => c.id !== savedCustomer!.id && c.email.toLowerCase() !== savedCustomer!.email.toLowerCase());
+        filtered.push(savedCustomer);
+        localStorage.setItem("techreus_local_customers", JSON.stringify(filtered));
+
+        // Remove from deleted list if it was there
+        const deletedStr = localStorage.getItem("techreus_deleted_customers");
+        let deletedIds: string[] = deletedStr ? JSON.parse(deletedStr) : [];
+        deletedIds = deletedIds.filter(id => id !== savedCustomer!.id);
+        localStorage.setItem("techreus_deleted_customers", JSON.stringify(deletedIds));
+      }
+
       setSuccessMsg(editingId ? "Cliente actualizado exitosamente." : "Nuevo cliente registrado exitosamente.");
       setTimeout(() => setSuccessMsg(null), 3000);
       
@@ -120,8 +213,25 @@ export default function CustomerCrud() {
     if (!confirm("¿Estás seguro de que deseas eliminar este cliente permanentemente?")) return;
     
     try {
-      const res = await fetch(`/api/customers/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("No se pudo eliminar el cliente.");
+      try {
+        await fetch(`/api/customers/${id}`, { method: "DELETE" });
+      } catch (err) {
+        console.warn("API delete failed, deleting locally:", err);
+      }
+
+      // Add to deleted IDs list so we filter it out of API results
+      const deletedStr = localStorage.getItem("techreus_deleted_customers");
+      const deletedIds: string[] = deletedStr ? JSON.parse(deletedStr) : [];
+      if (!deletedIds.includes(id)) {
+        deletedIds.push(id);
+        localStorage.setItem("techreus_deleted_customers", JSON.stringify(deletedIds));
+      }
+
+      // Remove from localStorage local list as well
+      const localStr = localStorage.getItem("techreus_local_customers");
+      let localCustomers: Customer[] = localStr ? JSON.parse(localStr) : [];
+      localCustomers = localCustomers.filter(c => c.id !== id);
+      localStorage.setItem("techreus_local_customers", JSON.stringify(localCustomers));
       
       setSuccessMsg("Cliente eliminado correctamente.");
       setTimeout(() => setSuccessMsg(null), 3000);
