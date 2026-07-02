@@ -7,7 +7,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
     description: "Powerbank portátil de 10,000mAh con panel solar integrado de alta eficiencia, carga dos dispositivos a la vez con energía limpia.",
     price: 29.90,
     category: "Tecnología",
-    image: "https://images.unsplash.com/photo-1617791160536-598cf32026fb?auto=format&fit=crop&q=80&w=600",
+    image: "https://images.unsplash.com/photo-1609081219090-a6d81d3085bf?auto=format&fit=crop&q=80&w=600",
     impact: "Aprovecha la energía solar directa, disminuyendo el consumo de la red eléctrica.",
     co2Saved: 3.80,
     rating: 4.6,
@@ -89,7 +89,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
     price: 189.00,
     category: "Tecnología",
     image: "https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&q=80&w=600",
-    impact: "Previene la acumulación de desechos tecnológicos y evita la extracción de litio y cobalto para baterías nuevas.",
+    impact: "Previene la acumulación de desechos tecnológicos and evita la extracción de litio y cobalto para baterías nuevas.",
     co2Saved: 38.00,
     rating: 4.6,
     stock: 14,
@@ -176,18 +176,6 @@ export const DEFAULT_PRODUCTS: Product[] = [
     stock: 18
   },
   {
-    id: "p15",
-    name: "Powerbank Solar Ultra-Capacidad 26800mAh",
-    description: "Batería portátil de alta capacidad con múltiples puertos de salida rápidos y panel solar monocristalino integrado de alta conversión.",
-    price: 49.99,
-    category: "Tecnología",
-    image: "https://images.unsplash.com/photo-1620283085439-39620a1e21c4?auto=format&fit=crop&q=80&w=600",
-    impact: "Permite autosuficiencia energética al aire libre y reduce la dependencia de cargadores de pared.",
-    co2Saved: 6.20,
-    rating: 4.7,
-    stock: 22
-  },
-  {
     id: "p16",
     name: "Altavoz Bluetooth de Corcho y Textil Reciclado",
     description: "Altavoz inalámbrico de alta potencia acústica. Revestimiento de corcho natural para absorción acústica óptima y malla de tela reciclada de botellas PET.",
@@ -202,7 +190,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
   {
     id: "p17",
     name: "Smartphone Samsung Galaxy S22 Ultra Reacondicionado",
-    description: "Smartphone premium con lápiz óptico S-Pen integrado, cinco cámaras avanzadas y pantalla AMOLED dinámica. Verificado exhaustivamente.",
+    description: "Smartphone premium con lápiz óptico S-Pen integrado, de cinco cámaras avanzadas y pantalla AMOLED dinámica. Verificado exhaustivamente.",
     price: 479.00,
     category: "Tecnología",
     image: "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&q=80&w=600",
@@ -256,18 +244,6 @@ export const DEFAULT_PRODUCTS: Product[] = [
       co2SavedProduction: 42,
       modelYear: 2021
     }
-  },
-  {
-    id: "p20",
-    name: "Cargador Rápido Inalámbrico de Madera FSC",
-    description: "Cargador inalámbrico Qi rápido de 15W fabricado a mano con madera de roble sostenible certificada FSC y cable reforzado de cáñamo natural.",
-    price: 24.90,
-    category: "Tecnología",
-    image: "https://images.unsplash.com/photo-1622445262465-2481c4574875?auto=format&fit=crop&q=80&w=600",
-    impact: "Elaborado con materiales biodegradables y renovables, disminuyendo el contenido plástico en un 90%.",
-    co2Saved: 3.20,
-    rating: 4.5,
-    stock: 16
   }
 ];
 

@@ -47,7 +47,7 @@ export default function ShoppingCartOverlay({
   });
 
   // Payment Details
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'bizum' | 'paypal' | 'applepay'>('card');
+  const [paymentMethod] = useState<'card'>('card');
   const [cardDetails, setCardDetails] = useState({
     number: "",
     holder: "",
@@ -184,13 +184,8 @@ export default function ShoppingCartOverlay({
       return;
     }
 
-    if (paymentMethod === 'card' && (!cardDetails.number || !cardDetails.holder || !cardDetails.expiry || !cardDetails.cvv)) {
+    if (!cardDetails.number || !cardDetails.holder || !cardDetails.expiry || !cardDetails.cvv) {
       alert("Por favor, complete los datos de su tarjeta para la pasarela segura.");
-      return;
-    }
-
-    if (paymentMethod === 'bizum' && !bizumPhone) {
-      alert("Por favor, proporcione su número de móvil para Bizum.");
       return;
     }
 
@@ -671,197 +666,92 @@ export default function ShoppingCartOverlay({
                         </span>
                       </div>
 
-                      {/* Payment Method Selector Grid */}
-                      <div className="grid grid-cols-4 gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setPaymentMethod('card')}
-                          className={`p-2 rounded-xl border text-center flex flex-col items-center justify-center gap-1 cursor-pointer transition-all ${
-                            paymentMethod === 'card' 
-                              ? 'bg-emerald-600 border-emerald-500 text-white font-bold' 
-                              : 'bg-slate-800/50 border-slate-800 hover:bg-slate-800 text-slate-300'
-                          }`}
-                        >
-                          <CreditCard className="w-4 h-4" />
-                          <span className="text-[8px] uppercase tracking-wide">Tarjeta</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setPaymentMethod('bizum')}
-                          className={`p-2 rounded-xl border text-center flex flex-col items-center justify-center gap-1 cursor-pointer transition-all ${
-                            paymentMethod === 'bizum' 
-                              ? 'bg-emerald-600 border-emerald-500 text-white font-bold' 
-                              : 'bg-slate-800/50 border-slate-800 hover:bg-slate-800 text-slate-300'
-                          }`}
-                        >
-                          <Smartphone className="w-4 h-4" />
-                          <span className="text-[8px] uppercase tracking-wide">Bizum</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setPaymentMethod('paypal')}
-                          className={`p-2 rounded-xl border text-center flex flex-col items-center justify-center gap-1 cursor-pointer transition-all ${
-                            paymentMethod === 'paypal' 
-                              ? 'bg-emerald-600 border-emerald-500 text-white font-bold' 
-                              : 'bg-slate-800/50 border-slate-800 hover:bg-slate-800 text-slate-300'
-                          }`}
-                        >
-                          <Wallet className="w-4 h-4" />
-                          <span className="text-[8px] uppercase tracking-wide">PayPal</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setPaymentMethod('applepay')}
-                          className={`p-2 rounded-xl border text-center flex flex-col items-center justify-center gap-1 cursor-pointer transition-all ${
-                            paymentMethod === 'applepay' 
-                              ? 'bg-emerald-600 border-emerald-500 text-white font-bold' 
-                              : 'bg-slate-800/50 border-slate-800 hover:bg-slate-800 text-slate-300'
-                          }`}
-                        >
-                          <ShoppingBag className="w-4 h-4" />
-                          <span className="text-[8px] uppercase tracking-wide">Apple Pay</span>
-                        </button>
-                      </div>
-
                       {/* Payment details form container */}
                       <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800/80">
-                        {paymentMethod === 'card' && (
-                          <div className="space-y-3.5">
-                            {/* Live Interactive Card Graphic */}
-                            <div className={`relative h-28 w-full rounded-xl bg-gradient-to-br from-emerald-600 to-indigo-800 p-4 text-white flex flex-col justify-between overflow-hidden shadow-md border border-emerald-500/20 transition-all duration-300 ${cardFocused ? 'scale-[1.02] ring-1 ring-emerald-400' : ''}`}>
-                              <div className="flex justify-between items-start">
-                                <span className="font-mono text-xs font-bold uppercase tracking-widest text-emerald-200">TechReus GreenPay</span>
-                                <div className="h-5 w-8 bg-white/20 rounded-md flex items-center justify-center text-[10px] font-mono tracking-tight text-white font-black">VISA</div>
-                              </div>
-
-                              <div className="font-mono text-sm tracking-widest text-center py-1">
-                                {cardDetails.number || "•••• •••• •••• ••••"}
-                              </div>
-
-                              <div className="flex justify-between items-center text-[10px] font-mono">
-                                <div className="truncate pr-2">
-                                  <span className="text-slate-300 text-[8px] block uppercase font-sans">Titular</span>
-                                  <span className="truncate block font-bold uppercase">{cardDetails.holder || "NOMBRE EN TARJETA"}</span>
-                                </div>
-                                <div className="shrink-0 text-right">
-                                  <span className="text-slate-300 text-[8px] block uppercase font-sans">Exp</span>
-                                  <span className="font-bold">{cardDetails.expiry || "MM/YY"}</span>
-                                </div>
-                              </div>
+                        <div className="space-y-3.5">
+                          {/* Live Interactive Card Graphic */}
+                          <div className={`relative h-28 w-full rounded-xl bg-gradient-to-br from-emerald-600 to-indigo-800 p-4 text-white flex flex-col justify-between overflow-hidden shadow-md border border-emerald-500/20 transition-all duration-300 ${cardFocused ? 'scale-[1.02] ring-1 ring-emerald-400' : ''}`}>
+                            <div className="flex justify-between items-start">
+                              <span className="font-mono text-xs font-bold uppercase tracking-widest text-emerald-200">TechReus GreenPay</span>
+                              <div className="h-5 w-8 bg-white/20 rounded-md flex items-center justify-center text-[10px] font-mono tracking-tight text-white font-black">VISA</div>
                             </div>
 
-                            {/* Card inputs */}
-                            <div className="space-y-2">
+                            <div className="font-mono text-sm tracking-widest text-center py-1">
+                              {cardDetails.number || "•••• •••• •••• ••••"}
+                            </div>
+
+                            <div className="flex justify-between items-center text-[10px] font-mono">
+                              <div className="truncate pr-2">
+                                <span className="text-slate-300 text-[8px] block uppercase font-sans">Titular</span>
+                                <span className="truncate block font-bold uppercase">{cardDetails.holder || "NOMBRE EN TARJETA"}</span>
+                              </div>
+                              <div className="shrink-0 text-right">
+                                <span className="text-slate-300 text-[8px] block uppercase font-sans">Exp</span>
+                                <span className="font-bold">{cardDetails.expiry || "MM/YY"}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Card inputs */}
+                          <div className="space-y-2">
+                            <div className="space-y-1">
+                              <label className="text-[8px] uppercase font-bold text-slate-400 block tracking-wider">Número de Tarjeta</label>
+                              <input
+                                type="text"
+                                name="number"
+                                value={cardDetails.number}
+                                onChange={handleCardInputChange}
+                                onFocus={() => setCardFocused(true)}
+                                onBlur={() => setCardFocused(false)}
+                                placeholder="4000 1234 5678 9010"
+                                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono text-white placeholder-slate-600 focus:outline-hidden focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                              />
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="text-[8px] uppercase font-bold text-slate-400 block tracking-wider">Nombre del Titular</label>
+                              <input
+                                type="text"
+                                name="holder"
+                                value={cardDetails.holder}
+                                onChange={handleCardInputChange}
+                                onFocus={() => setCardFocused(true)}
+                                onBlur={() => setCardFocused(false)}
+                                placeholder="Ej. Alejandra Gómez"
+                                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 uppercase focus:outline-hidden focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                              />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
                               <div className="space-y-1">
-                                <label className="text-[8px] uppercase font-bold text-slate-400 block tracking-wider">Número de Tarjeta</label>
+                                <label className="text-[8px] uppercase font-bold text-slate-400 block tracking-wider">Vencimiento</label>
                                 <input
                                   type="text"
-                                  name="number"
-                                  value={cardDetails.number}
+                                  name="expiry"
+                                  value={cardDetails.expiry}
                                   onChange={handleCardInputChange}
                                   onFocus={() => setCardFocused(true)}
                                   onBlur={() => setCardFocused(false)}
-                                  placeholder="4000 1234 5678 9010"
-                                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono text-white placeholder-slate-600 focus:outline-hidden focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                                  placeholder="MM/YY"
+                                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono text-white placeholder-slate-600 text-center focus:outline-hidden focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                                 />
                               </div>
-
                               <div className="space-y-1">
-                                <label className="text-[8px] uppercase font-bold text-slate-400 block tracking-wider">Nombre del Titular</label>
+                                <label className="text-[8px] uppercase font-bold text-slate-400 block tracking-wider">CVV (Código)</label>
                                 <input
-                                  type="text"
-                                  name="holder"
-                                  value={cardDetails.holder}
+                                  type="password"
+                                  name="cvv"
+                                  value={cardDetails.cvv}
                                   onChange={handleCardInputChange}
                                   onFocus={() => setCardFocused(true)}
                                   onBlur={() => setCardFocused(false)}
-                                  placeholder="Ej. Alejandra Gómez"
-                                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 uppercase focus:outline-hidden focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-                                />
-                              </div>
-
-                              <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-1">
-                                  <label className="text-[8px] uppercase font-bold text-slate-400 block tracking-wider">Vencimiento</label>
-                                  <input
-                                    type="text"
-                                    name="expiry"
-                                    value={cardDetails.expiry}
-                                    onChange={handleCardInputChange}
-                                    onFocus={() => setCardFocused(true)}
-                                    onBlur={() => setCardFocused(false)}
-                                    placeholder="MM/YY"
-                                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono text-white placeholder-slate-600 text-center focus:outline-hidden focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-                                  />
-                                </div>
-                                <div className="space-y-1">
-                                  <label className="text-[8px] uppercase font-bold text-slate-400 block tracking-wider">CVV (Código)</label>
-                                  <input
-                                    type="password"
-                                    name="cvv"
-                                    value={cardDetails.cvv}
-                                    onChange={handleCardInputChange}
-                                    onFocus={() => setCardFocused(true)}
-                                    onBlur={() => setCardFocused(false)}
-                                    placeholder="•••"
-                                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono text-white placeholder-slate-600 text-center focus:outline-hidden focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {paymentMethod === 'bizum' && (
-                          <div className="space-y-3.5 text-center">
-                            <span className="text-[10px] text-slate-300 block leading-normal">
-                              Paga de inmediato ingresando el número de móvil afiliado a tu banco. Te enviaremos una notificación instantánea de Bizum para confirmar.
-                            </span>
-                            <div className="space-y-1 text-left">
-                              <label className="text-[8px] uppercase font-bold text-slate-400 block tracking-wider">Número de Teléfono Bizum</label>
-                              <div className="relative flex items-center bg-slate-900 border border-slate-800 rounded-xl px-3 py-2">
-                                <Smartphone className="w-4 h-4 text-emerald-400 mr-2 shrink-0" />
-                                <input
-                                  type="tel"
-                                  value={bizumPhone}
-                                  onChange={(e) => setBizumPhone(e.target.value)}
-                                  placeholder="Ej. 600 000 000"
-                                  className="w-full bg-transparent border-0 outline-hidden text-xs text-white placeholder-slate-600 font-mono"
+                                  placeholder="•••"
+                                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono text-white placeholder-slate-600 text-center focus:outline-hidden focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                                 />
                               </div>
                             </div>
                           </div>
-                        )}
-
-                        {paymentMethod === 'paypal' && (
-                          <div className="text-center py-2 space-y-2">
-                            <span className="text-[10px] text-slate-300 block leading-normal">
-                              Paga de forma rápida y segura vinculando tu monedero PayPal con nuestra pasarela de carbono neutro.
-                            </span>
-                            <button
-                              type="button"
-                              className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-slate-950 font-bold text-xs rounded-xl shadow-3xs inline-flex items-center space-x-1.5 cursor-pointer transition-colors"
-                            >
-                              <Wallet className="w-3.5 h-3.5" />
-                              <span>Conectar con PayPal</span>
-                            </button>
-                          </div>
-                        )}
-
-                        {paymentMethod === 'applepay' && (
-                          <div className="text-center py-2 space-y-2">
-                            <span className="text-[10px] text-slate-300 block leading-normal">
-                              Usa Apple Pay para un checkout express con autenticación biométrica de un solo toque.
-                            </span>
-                            <button
-                              type="button"
-                              className="px-4 py-2 bg-white hover:bg-slate-100 text-slate-950 font-bold text-xs rounded-xl shadow-3xs inline-flex items-center space-x-1.5 cursor-pointer transition-colors"
-                            >
-                              <ShoppingBag className="w-3.5 h-3.5" />
-                              <span>Pagar con Apple Pay</span>
-                            </button>
-                          </div>
-                        )}
+                        </div>
                       </div>
                     </div>
 
