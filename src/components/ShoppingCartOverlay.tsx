@@ -5,6 +5,7 @@ import {
   Lock, CreditCard, Wallet, Smartphone, Gift, UserPlus, LogIn, Percent
 } from "lucide-react";
 import React, { useState } from "react";
+import { DEFAULT_CUSTOMERS } from "../data";
 
 interface ShoppingCartOverlayProps {
   isOpen: boolean;
@@ -131,7 +132,7 @@ export default function ShoppingCartOverlay({
       // Check localStorage as fallback
       if (!user) {
         const localStr = localStorage.getItem("techreus_local_customers");
-        const localCustomers: Customer[] = localStr ? JSON.parse(localStr) : [];
+        const localCustomers: Customer[] = localStr ? JSON.parse(localStr) : DEFAULT_CUSTOMERS;
         const found = localCustomers.find(
           c => c.email.toLowerCase() === loginData.email.toLowerCase() && c.hasAccount && c.password === loginData.password
         );
@@ -232,7 +233,7 @@ export default function ShoppingCartOverlay({
 
       // Save user to localStorage
       const localStr = localStorage.getItem("techreus_local_customers");
-      const localCustomers: Customer[] = localStr ? JSON.parse(localStr) : [];
+      const localCustomers: Customer[] = localStr ? JSON.parse(localStr) : DEFAULT_CUSTOMERS;
       const filtered = localCustomers.filter(c => c.id !== data!.id && c.email.toLowerCase() !== data!.email.toLowerCase());
       filtered.push(data);
       localStorage.setItem("techreus_local_customers", JSON.stringify(filtered));

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Product } from "../types";
 import { Sparkles, Star, ShieldCheck, ShoppingCart, QrCode, Cpu, X } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { DEFAULT_PRODUCTS } from "../data";
 
 interface EcoStoreProps {
   onAddToCart: (product: Product) => void;
@@ -16,13 +17,21 @@ export default function EcoStore({
 
   useEffect(() => {
     fetch("/api/products")
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("API not available");
+        return res.json();
+      })
       .then((data) => {
-        setProducts(data);
+        if (Array.isArray(data) && data.length > 0) {
+          setProducts(data);
+        } else {
+          setProducts(DEFAULT_PRODUCTS);
+        }
         setLoading(false);
       })
       .catch((err) => {
-        console.error("Error fetching products:", err);
+        console.warn("Error fetching products, using local fallback:", err);
+        setProducts(DEFAULT_PRODUCTS);
         setLoading(false);
       });
   }, []);

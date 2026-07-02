@@ -35,6 +35,26 @@ export default function EcoAsistente() {
     }
   }, [messages, isOpen]);
 
+  const getLocalAssistantResponse = (query: string): string => {
+    const q = query.toLowerCase();
+    if (q.includes("cepillo")) {
+      return "¡Excelente pregunta! 🪥 Los cepillos de dientes de plástico comunes tardan más de 400 años en descomponerse y no se reciclan en contenedores estándar.\n\nTe recomiendo:\n1. Cambiar a cepillos de bambú biodegradables (retirando las cerdas de nailon antes de compostar el mango).\n2. Si tienes cepillos de plástico viejos, puedes reutilizarlos para limpiar juntas de baldosas, calzado o cadenas de bicicleta.\n3. Llevarlos a puntos de recogida especializados de marcas asociadas.";
+    }
+    if (q.includes("cocina") || q.includes("plástico") || q.includes("plastico")) {
+      return "¡Reducir plástico en la cocina es un gran paso! 🥑 Aquí tienes unos ecotips prácticos:\n\n• **Adiós al film plástico**: Usa envoltorios de cera de abeja lavables y reutilizables.\n• **Compra a granel**: Lleva tus propios frascos de vidrio y bolsas de tela para legumbres, arroz o frutos secos.\n• **Estropajos naturales**: Cambia las esponjas sintéticas de poliuretano por estropajos de lufa vegetal biodegradable.\n• **Almacenamiento**: Prefiere recipientes de vidrio o acero inoxidable sobre los de plástico tradicional.";
+    }
+    if (q.includes("compost") || q.includes("compostera") || q.includes("orgánico") || q.includes("organico")) {
+      return "¡Iniciar tu propia compostera es asombroso! 🍂 Sigue esta guía de 3 pasos sencillos:\n\n1. **El contenedor**: Puede ser una caja de plástico perforada o un espacio en tu jardín.\n2. **La receta (50/50)**:\n   - *Materiales Verdes* (Nitrógeno): Restos de frutas, verduras, café y bolsitas de té.\n   - *Materiales Marrones* (Carbono): Hojas secas, cartón sin tinta troceado, aserrín o cáscaras de huevo.\n3. **Mantenimiento**: Revuelve la mezcla una vez por semana para airearla y asegúrate de que esté húmeda como una esponja escurrida. ¡En 3 meses tendrás abono premium para tus plantas!";
+    }
+    if (q.includes("electrónico") || q.includes("electronico") || q.includes("celular") || q.includes("computadora") || q.includes("laptop") || q.includes("reciclar") || q.includes("recicl")) {
+      return "En TechReus nos apasiona el reciclaje de tecnología 💻.\n\nSi tienes laptops, smartphones o tablets viejos:\n1. **Usa nuestro Portal de Vendedor**: Registra los detalles de tu equipo en la pestaña 'Vender mi equipo'. Te daremos un diagnóstico técnico automático y estimación de CO2 evitado.\n2. **Puntos de Reciclaje**: Si el equipo no funciona del todo, llévalo a uno de nuestros contenedores de EcoTech para extraer metales valiosos y evitar fugas de litio o plomo al medio ambiente.\n3. **Gana EcoPoints**: Acumula puntos canjeables por descuentos en nuestra tienda de tecnología reacondicionada certificada.";
+    }
+    if (q.includes("hola") || q.includes("buenos") || q.includes("saludos") || q.includes("que tal") || q.includes("quién eres") || q.includes("quien eres")) {
+      return "¡Hola! Qué gusto saludarte 🌱. Estoy aquí para darte recomendaciones de sostenibilidad, tips de reciclaje o guiarte en el uso de la plataforma TechReus. ¿Qué te gustaría aprender hoy?";
+    }
+    return "¡Me encanta tu iniciativa verde! 🌍 Como tu EcoAsistente local, te recuerdo que cada pequeño hábito cuenta. Puedes:\n\n• Registrar tus dispositivos antiguos en la pestaña 'Vender mi equipo' para darles una segunda vida.\n• Comprar tecnología reacondicionada en nuestro catálogo con diagnóstico certificado QR.\n• Administrar clientes sostenibles en el panel de control.\n\n¿Quieres que hablemos sobre cómo reciclar materiales complejos, compostar en casa o reducir plásticos?";
+  };
+
   const handleSendMessage = async (text: string) => {
     if (!text.trim() || loading) return;
 
@@ -82,14 +102,15 @@ export default function EcoAsistente() {
 
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (err) {
-      console.error("Chat error:", err);
-      // Fallback message error
+      console.warn("Chat error, using smart rule-based local response fallback:", err);
+      // Smart Fallback response
+      const fallbackText = getLocalAssistantResponse(text);
       setMessages((prev) => [
         ...prev,
         {
           id: Math.random().toString(),
           role: "assistant",
-          text: "Lo lamento, experimenté un pequeño percance al intentar conectarme. Intenta preguntar de nuevo o asegúrate de que el servidor esté activo. ♻️",
+          text: `${fallbackText}\n\n*(EcoAsistente local operando de modo seguro offline)* ♻️`,
           timestamp: new Date()
         }
       ]);

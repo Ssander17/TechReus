@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { Customer, UserSubmittedProduct } from "../types";
 import { motion, AnimatePresence } from "motion/react";
+import { DEFAULT_CUSTOMERS, DEFAULT_USER_PRODUCTS } from "../data";
 
 interface EcoSellerPortalProps {
   loggedInUser: Customer | null;
@@ -76,7 +77,7 @@ export default function EcoSellerPortal({
 
       // Load local products from localStorage
       const localStr = localStorage.getItem("techreus_local_products");
-      const localProducts: UserSubmittedProduct[] = localStr ? JSON.parse(localStr) : [];
+      const localProducts: UserSubmittedProduct[] = localStr ? JSON.parse(localStr) : DEFAULT_USER_PRODUCTS;
 
       // Filter local products for this user
       const userLocalProducts = localProducts.filter(
@@ -132,7 +133,7 @@ export default function EcoSellerPortal({
 
       if (!user) {
         const localStr = localStorage.getItem("techreus_local_customers");
-        const localCustomers: Customer[] = localStr ? JSON.parse(localStr) : [];
+        const localCustomers: Customer[] = localStr ? JSON.parse(localStr) : DEFAULT_CUSTOMERS;
         const found = localCustomers.find(
           c => c.email.toLowerCase() === loginData.email.toLowerCase() && c.hasAccount && c.password === loginData.password
         );
@@ -212,7 +213,7 @@ export default function EcoSellerPortal({
 
       // Save to localStorage list
       const localStr = localStorage.getItem("techreus_local_customers");
-      const localCustomers: Customer[] = localStr ? JSON.parse(localStr) : [];
+      const localCustomers: Customer[] = localStr ? JSON.parse(localStr) : DEFAULT_CUSTOMERS;
       const filtered = localCustomers.filter(c => c.id !== user!.id && c.email.toLowerCase() !== user!.email.toLowerCase());
       filtered.push(user);
       localStorage.setItem("techreus_local_customers", JSON.stringify(filtered));
@@ -296,7 +297,7 @@ export default function EcoSellerPortal({
 
       // Save to localStorage list
       const localStr = localStorage.getItem("techreus_local_products");
-      const localProducts: UserSubmittedProduct[] = localStr ? JSON.parse(localStr) : [];
+      const localProducts: UserSubmittedProduct[] = localStr ? JSON.parse(localStr) : DEFAULT_USER_PRODUCTS;
       localProducts.push(registeredProduct);
       localStorage.setItem("techreus_local_products", JSON.stringify(localProducts));
 

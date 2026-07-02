@@ -4,6 +4,7 @@ import {
   PhoneCall, FileText, Check, HelpCircle, AlertCircle, RefreshCw, X, Copy
 } from "lucide-react";
 import { Customer } from "../types";
+import { DEFAULT_CUSTOMERS } from "../data";
 
 export default function CustomerCrud() {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -41,7 +42,13 @@ export default function CustomerCrud() {
 
       // Load local modifications/creations
       const localStr = localStorage.getItem("techreus_local_customers");
-      const localCustomers: Customer[] = localStr ? JSON.parse(localStr) : [];
+      let localCustomers: Customer[] = [];
+      if (localStr === null) {
+        localCustomers = DEFAULT_CUSTOMERS;
+        localStorage.setItem("techreus_local_customers", JSON.stringify(DEFAULT_CUSTOMERS));
+      } else {
+        localCustomers = JSON.parse(localStr);
+      }
 
       // Load deleted list
       const deletedStr = localStorage.getItem("techreus_deleted_customers");
