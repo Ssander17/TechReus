@@ -63,6 +63,23 @@ export default function ShoppingCartOverlay({
   const [copied, setCopied] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
+  // Auto-complete purchase details upon login or when opening the cart while logged in
+  React.useEffect(() => {
+    if (isOpen && loggedInUser) {
+      setFormData(prev => ({
+        ...prev,
+        name: loggedInUser.name || "",
+        email: loggedInUser.email || "",
+        phone: loggedInUser.phone || "",
+        address: loggedInUser.address || "",
+      }));
+      setCardDetails(prev => ({
+        ...prev,
+        holder: loggedInUser.name || ""
+      }));
+    }
+  }, [loggedInUser, isOpen]);
+
   if (!isOpen) return null;
 
   // Pricing & Impact Calculations
