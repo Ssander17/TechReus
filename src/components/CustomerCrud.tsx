@@ -488,9 +488,9 @@ export default function CustomerCrud() {
               <div className="bg-slate-800/80 p-3 rounded-xl border border-slate-700/50 flex items-start gap-3">
                 <HelpCircle className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
                 <div className="space-y-0.5">
-                  <span className="text-[10px] uppercase text-slate-400 font-bold block">Soporte Central España (Toll Free)</span>
+                  <span className="text-[10px] uppercase text-slate-400 font-bold block">Soporte Central Ecuador</span>
                   <a href="tel:9008007387" className="text-xs font-bold font-mono hover:underline text-white block">
-                    900 800 REUS (7387)
+                    1800 REUS (7387)
                   </a>
                 </div>
               </div>
@@ -509,8 +509,8 @@ export default function CustomerCrud() {
                 <Phone className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
                 <div className="space-y-0.5">
                   <span className="text-[10px] uppercase text-slate-400 font-bold block">WhatsApp de Mensajería y Despachos</span>
-                  <a href="https://wa.me/34611223344" target="_blank" rel="noopener noreferrer" className="text-xs font-bold font-mono hover:underline text-white block">
-                    +34 611 223 344
+                  <a href="https://wa.me/593968838479" target="_blank" rel="noopener noreferrer" className="text-xs font-bold font-mono hover:underline text-white block">
+                    +593 96 8838479
                   </a>
                 </div>
               </div>
@@ -519,7 +519,7 @@ export default function CustomerCrud() {
             <div className="p-3 bg-emerald-950/40 rounded-xl border border-emerald-900/55 flex items-start gap-2.5">
               <AlertCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
               <p className="text-[10px] text-emerald-300 leading-normal">
-                <strong>Horario de Atención:</strong> Lunes a Viernes de 9:00 a 18:00 (hora peninsular). El tiempo medio de respuesta en WhatsApp es de 10 minutos.
+                <strong>Horario de Atención:</strong> Lunes a Viernes de 9:00 a 18:00 (hora de Ecuador). El tiempo medio de respuesta en WhatsApp es de 10 minutos.
               </p>
             </div>
           </div>
@@ -599,7 +599,7 @@ export default function CustomerCrud() {
                     name="phone"
                     value={formData.phone}
                     onChange={handleInputChange}
-                    placeholder="Ej. +34 600 000 000"
+                    placeholder="Ej. +593 96 883 8479"
                     className="w-full bg-transparent border-0 outline-hidden text-xs text-slate-700"
                   />
                 </div>

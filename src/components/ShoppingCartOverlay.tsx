@@ -607,7 +607,7 @@ export default function ShoppingCartOverlay({
                               name="phone"
                               value={formData.phone}
                               onChange={handleInputChange}
-                              placeholder="Ej. +34 600 000 000"
+                              placeholder="Ej. +593 96 883 8479"
                               className="w-full bg-transparent border-0 outline-hidden text-xs text-slate-700"
                             />
                           </div>
@@ -885,11 +885,11 @@ export default function ShoppingCartOverlay({
                 <div className="space-y-2 text-xs text-slate-600">
                   <div className="flex justify-between items-center bg-white/60 p-2 rounded-lg border border-emerald-100/50">
                     <span className="font-medium text-[11px]">Soporte Telefónico:</span>
-                    <a href="tel:9008007387" className="font-mono font-bold hover:underline text-emerald-800">900 800 REUS</a>
+                    <a href="tel:18008007387" className="font-mono font-bold hover:underline text-emerald-800">1800 REUS</a>
                   </div>
                   <div className="flex justify-between items-center bg-white/60 p-2 rounded-lg border border-emerald-100/50">
                     <span className="font-medium text-[11px]">WhatsApp Express:</span>
-                    <a href="https://wa.me/34611223344" target="_blank" rel="noopener noreferrer" className="font-mono font-bold hover:underline text-emerald-800">+34 611 223 344</a>
+                    <a href="https://wa.me/593968838479" target="_blank" rel="noopener noreferrer" className="font-mono font-bold hover:underline text-emerald-800">+593 96 8838479</a>
                   </div>
                   <div className="flex justify-between items-center bg-white/60 p-2 rounded-lg border border-emerald-100/50">
                     <span className="font-medium text-[11px]">Horario de Atención:</span>

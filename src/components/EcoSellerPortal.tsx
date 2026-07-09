@@ -427,7 +427,7 @@ export default function EcoSellerPortal({
               <div className="text-xs space-y-1.5">
                 <p className="font-bold text-white">¿Necesitas ayuda con tu envío?</p>
                 <p className="text-slate-400 leading-normal">Ofrecemos recolector a domicilio gratuito una vez registrado el dispositivo. Si tienes dudas, contáctanos al número de soporte directo.</p>
-                <span className="font-mono text-emerald-400 font-bold tracking-wider">+34 900 839 201</span>
+                <span className="font-mono text-emerald-400 font-bold tracking-wider">+593 96 883 8479</span>
               </div>
             </div>
           </div>
@@ -509,7 +509,7 @@ export default function EcoSellerPortal({
                       <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                       <input
                         type="tel"
-                        placeholder="+34 612 345 678"
+                        placeholder="+593 96 883 8479"
                         className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 outline-none transition-all"
                         value={registerData.phone}
                         onChange={(e) => setRegisterData({...registerData, phone: e.target.value})}
