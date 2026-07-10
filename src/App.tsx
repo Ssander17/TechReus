@@ -13,6 +13,7 @@ import ShoppingCartOverlay from "./components/ShoppingCartOverlay";
 import EcoSellerPortal from "./components/EcoSellerPortal";
 import { Product, CartItem, Customer } from "./types";
 import { motion, AnimatePresence } from "motion/react";
+import { Facebook, Instagram } from "lucide-react";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>("store");
@@ -109,12 +110,34 @@ export default function App() {
           <p className="text-xs text-slate-400">
             © {new Date().getFullYear()} TechReus • Conectando la comunidad tecnológica por un planeta más limpio y sostenible.
           </p>
-          <div className="flex justify-center space-x-3 text-[10px] text-slate-400 font-medium">
+          <div className="flex justify-center items-center flex-wrap gap-x-3 gap-y-1.5 text-[10px] text-slate-400 font-medium">
             <span>Privacidad</span>
             <span>•</span>
             <span>Términos</span>
             <span>•</span>
             <span>Eco-Comercio</span>
+            <span>•</span>
+            <a
+              href="https://www.facebook.com/profile.php?id=61591181774608"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-emerald-600 transition-colors flex items-center gap-1 inline-flex align-middle"
+              title="Siguenos en Facebook"
+            >
+              <Facebook className="w-3.5 h-3.5" />
+              <span>Facebook</span>
+            </a>
+            <span>•</span>
+            <a
+              href="https://www.instagram.com/techreuse.ec/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-emerald-600 transition-colors flex items-center gap-1 inline-flex align-middle"
+              title="Siguenos en Instagram"
+            >
+              <Instagram className="w-3.5 h-3.5" />
+              <span>Instagram</span>
+            </a>
           </div>
         </div>
       </footer>
