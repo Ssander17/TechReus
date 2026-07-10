@@ -278,6 +278,18 @@ const PRODUCTS = [
       co2SavedProduction: 42,
       modelYear: 2021
     }
+  },
+  {
+    id: "p-mantenimiento",
+    name: "Mantenimiento Preventivo y Correctivo de Equipos",
+    description: "Servicio integral de limpieza profunda, cambio de pasta térmica, optimización de sistema y diagnóstico de hardware para tu laptop, PC o consola. El costo final se determinará según el diagnóstico de nuestros técnicos.",
+    price: 0.00,
+    category: "Servicios",
+    image: "https://images.unsplash.com/photo-1588508065123-287b28e013da?auto=format&fit=crop&q=80&w=600",
+    impact: "Prolonga la vida útil de tus equipos actuales para reducir la chatarra electrónica y evitar la emisión de nuevos gases contaminantes.",
+    co2Saved: 45.00,
+    rating: 4.9,
+    stock: 99
   }
 ];
 

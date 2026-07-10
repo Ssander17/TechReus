@@ -341,7 +341,11 @@ export default function ShoppingCartOverlay({
                         <div className="flex-1 space-y-1">
                           <h4 className="text-xs font-bold text-slate-800 leading-tight line-clamp-1">{item.product.name}</h4>
                           <span className="text-[9px] text-emerald-600 block font-bold uppercase tracking-wider">{item.product.category}</span>
-                          <span className="text-xs font-bold text-slate-900">${item.product.price.toFixed(2)}</span>
+                          {item.product.id === "p-mantenimiento" ? (
+                            <span className="text-[11px] font-bold text-emerald-600">Bajo Diagnóstico</span>
+                          ) : (
+                            <span className="text-xs font-bold text-slate-900">${item.product.price.toFixed(2)}</span>
+                          )}
                         </div>
 
                         {/* Quantity triggers & remove */}
